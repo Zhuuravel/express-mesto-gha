@@ -23,13 +23,17 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findOneAndDelete(req.params.cardId)
-    .then(() => res.send('Карточка удалена'))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
-        return;
+    .then((card) => {
+      if (!card) {
+        return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
       }
-      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
+      return res.status(200).send(card);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      }
+      return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -40,7 +44,12 @@ module.exports.likeCard = (req, res) => {
     cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
-  ).then((card) => res.status(200).send({ data: card }))
+  ).then((card) => {
+    if (!card) {
+      return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${cardId} не найдена` });
+    }
+    return res.status(200).send(card);
+  })
     .catch((err) => {
       if (err.message === 'NotFound') {
         res.status(NOT_FOUND).send({ message: 'Передан несуществующий id карточки' });
@@ -58,7 +67,12 @@ module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $pull: { likes: req.user._id } }, // убрать _id из массива
   { new: true },
-).then((card) => res.status(200).send({ data: card }))
+).then((card) => {
+  if (!card) {
+    return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
+  }
+  return res.status(200).send(card);
+})
   .catch((err) => {
     if (err.message === 'NotFound') {
       res.status(NOT_FOUND).send({ message: 'Передан несуществующий id карточки' });

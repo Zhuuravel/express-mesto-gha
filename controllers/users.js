@@ -9,17 +9,18 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getCurrentUser = (req, res) => {
   User.findById(req.user._id)
-    .then((user) => res.send({ user }))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: 'Пользователь по данному id не найден' });
-        return;
+    .then((user) => {
+      if (!user) {
+        return res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
       }
+      return res.status(200).send(user);
+    })
+    .catch((err) => {
       if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-        return;
+      } else {
+        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
       }
-      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -29,10 +30,9 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-        return;
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       }
-      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -45,18 +45,15 @@ module.exports.updateUserDescription = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-      upsert: true, // если пользователь не найден, он будет создан
     },
   )
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: 'Пользователь по данному id не найден' });
-        return;
+        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-        return;
       }
       res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
@@ -80,7 +77,7 @@ module.exports.updateUserAvatar = (req, res) => {
         res.status(NOT_FOUND).send({ message: 'Пользователь по данному id не найден' });
         return;
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
         return;
       }
