@@ -7,13 +7,13 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '6570c704b1e52c0fbd1d3ff8', // вставьте сюда _id созданного в предыдущем пункте пользователя
+    _id: '6571d04d7b1ebc844b5c581e', // вставьте сюда _id созданного в предыдущем пункте пользователя
   };
 
   next();
 });
 
-mongoose.connect('mongodb://localhost:27017/mestodb')
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb')
   .then(() => {
     console.log('MongoDB connected');
   });
