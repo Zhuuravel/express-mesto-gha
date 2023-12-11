@@ -8,12 +8,13 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getCurrentUser = (req, res) => {
-  User.findById(req.user._id)
+  console.log(req.params);
+  User.findById(req.params.userId)
     .then((user) => {
+      console.log(user);
       if (!user) {
-        return res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
-      }
-      return res.status(200).send(user);
+        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
+      } else res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
