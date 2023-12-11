@@ -49,11 +49,8 @@ module.exports.updateUserDescription = (req, res) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => res.send(user))
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
-      }
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       }
@@ -70,17 +67,14 @@ module.exports.updateUserAvatar = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-      upsert: true, // если пользователь не найден, он будет создан
     },
   )
-    .then((user) => res.send(user))
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
-      }
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } else {
+        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
       }
-      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
