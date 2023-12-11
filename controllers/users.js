@@ -31,9 +31,10 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } else {
+        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -41,17 +42,17 @@ module.exports.updateUserDescription = (req, res) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(
-    req.params.userId,
+    req.user._id,
     { name, about },
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
+        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
       }
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
@@ -64,7 +65,7 @@ module.exports.updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(
-    req.params.userId,
+    req.user._id,
     { avatar },
     {
       new: true, // обработчик then получит на вход обновлённую запись
@@ -72,15 +73,13 @@ module.exports.updateUserAvatar = (req, res) => {
       upsert: true, // если пользователь не найден, он будет создан
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
-        return;
+        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
       }
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-        return;
       }
       res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
