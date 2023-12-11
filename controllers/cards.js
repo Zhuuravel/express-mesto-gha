@@ -4,7 +4,7 @@ const { BAD_REQUEST, SERVER_ERROR, NOT_FOUND } = require('../errors/errors');
 module.exports.getCards = (req, res) => {
   Card.find({})
     .populate(['owner', 'likes'])
-    .then((cards) => res.send({ data: cards }))
+    .then((cards) => res.send(cards))
     .catch(() => res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' }));
 };
 

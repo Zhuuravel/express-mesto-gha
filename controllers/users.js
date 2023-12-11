@@ -41,7 +41,7 @@ module.exports.updateUserDescription = (req, res) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(
-    req.user._id,
+    req.params.userId,
     { name, about },
     {
       new: true, // обработчик then получит на вход обновлённую запись
@@ -51,7 +51,7 @@ module.exports.updateUserDescription = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.user._id} не найден` });
+        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
       }
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
@@ -64,7 +64,7 @@ module.exports.updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(
-    req.user._id,
+    req.params.userId,
     { avatar },
     {
       new: true, // обработчик then получит на вход обновлённую запись
@@ -75,7 +75,7 @@ module.exports.updateUserAvatar = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: 'Пользователь по данному id не найден' });
+        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
         return;
       }
       if (err.name === 'ValidationError') {
