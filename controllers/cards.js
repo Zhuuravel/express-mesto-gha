@@ -26,6 +26,7 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
+  console.log(req.params.cardId);
   Card.findOneAndDelete(req.params.cardId)
     .then((card) => {
       if (!card) {
@@ -35,9 +36,10 @@ module.exports.deleteCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } else {
+        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -55,15 +57,11 @@ module.exports.likeCard = (req, res) => {
     return res.status(200).send(card);
   })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(NOT_FOUND).send({ message: 'Передан несуществующий id карточки' });
-        return;
-      }
       if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
-        return;
+      } else {
+        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
       }
-      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -78,13 +76,9 @@ module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   return res.status(200).send(card);
 })
   .catch((err) => {
-    if (err.message === 'NotFound') {
-      res.status(NOT_FOUND).send({ message: 'Передан несуществующий id карточки' });
-      return;
-    }
     if (err.name === 'CastError') {
       res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка' });
-      return;
+    } else {
+      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     }
-    res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
   });
