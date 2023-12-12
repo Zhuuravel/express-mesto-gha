@@ -25,21 +25,19 @@ module.exports.createCard = (req, res) => {
     });
 };
 
-module.exports.deleteCard = (req, res) => {
-  Card.findOneAndDelete(req.params.cardId)
-    .then((card) => {
-      if (!card) {
-        return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
-      } return res.status(200).send(card);
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
-      }
-    });
-};
+module.exports.deleteCard = (req, res) => Card.findByIdAndDelete(req.params.cardId)
+  .then((card) => {
+    if (!card) {
+      return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
+    } return res.status(200).send(card);
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
+      res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+    } else {
+      res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
+    }
+  });
 
 module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
@@ -52,7 +50,7 @@ module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
 })
   .catch((err) => {
     if (err.name === 'CastError') {
-      res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка' });
+      res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
     } else {
       res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     }
