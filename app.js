@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose').default;
 const { NOT_FOUND } = require('./errors/errors');
+const routes = require('./routes');
 
 const app = express();
 
@@ -23,8 +24,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
     console.log('MongoDB connected');
   });
 
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
+app.use(routes);
 
 app.use('*', (req, res) => {
   res.status(NOT_FOUND).send({ message: 'Неверный путь' });
