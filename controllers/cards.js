@@ -1,5 +1,11 @@
 const Card = require('../models/cards');
-const { BAD_REQUEST, SERVER_ERROR, NOT_FOUND } = require('../errors/errors');
+const {
+  BAD_REQUEST,
+  SERVER_ERROR,
+  NOT_FOUND,
+  STATUS_CREATED,
+  STATUS_OK,
+} = require('../errors/errors');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
@@ -12,9 +18,9 @@ module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => {
-      Card.findById(card._id)
+      return Card.findById(card._id)
         .populate('owner')
-        .then((cards) => res.status(201).send(cards));
+        .then((cards) => res.status(STATUS_CREATED).send(cards));
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -29,7 +35,7 @@ module.exports.deleteCard = (req, res) => Card.findByIdAndDelete(req.params.card
   .then((card) => {
     if (!card) {
       return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
-    } return res.status(200).send(card);
+    } return res.status(STATUS_OK).send(card);
   })
   .catch((err) => {
     if (err.name === 'CastError') {
@@ -46,7 +52,7 @@ module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
 ).then((card) => {
   if (!card) {
     return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
-  } return res.status(200).send(card);
+  } return res.status(STATUS_OK).send(card);
 })
   .catch((err) => {
     if (err.name === 'CastError') {
@@ -63,7 +69,7 @@ module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
 ).then((card) => {
   if (!card) {
     return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
-  } return res.status(200).send(card);
+  } return res.status(STATUS_OK).send(card);
 })
   .catch((err) => {
     if (err.name === 'CastError') {

@@ -1,5 +1,11 @@
 const User = require('../models/users');
-const { BAD_REQUEST, SERVER_ERROR, NOT_FOUND } = require('../errors/errors');
+const {
+  BAD_REQUEST,
+  SERVER_ERROR,
+  NOT_FOUND,
+  STATUS_CREATED,
+  STATUS_OK,
+} = require('../errors/errors');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -12,7 +18,7 @@ module.exports.getCurrentUser = (req, res) => {
     .then((user) => {
       if (!user) {
         res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
-      } else res.status(200).send(user);
+      } else res.status(STATUS_OK).send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -26,7 +32,7 @@ module.exports.getCurrentUser = (req, res) => {
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(STATUS_CREATED).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
@@ -47,7 +53,7 @@ module.exports.updateUserDescription = (req, res) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.status(STATUS_OK).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
@@ -81,7 +87,7 @@ module.exports.updateUserAvatar = (req, res) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.status(STATUS_OK).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
