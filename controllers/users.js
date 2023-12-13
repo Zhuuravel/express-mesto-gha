@@ -3,7 +3,7 @@ const User = require('../models/users');
 const {
   BAD_REQUEST,
   SERVER_ERROR,
-  NotFound,
+  NOT_FOUND,
   STATUS_CREATED,
   STATUS_OK,
 } = require('../errors/errors');
@@ -18,8 +18,11 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getCurrentUser = (req, res) => {
   User.findById(req.params.userId)
-    .orFail(() => new NotFound(`Пользователь по id: ${req.params.userId} не найден`))
-    .then((card) => res.status(STATUS_OK).send(card))
+    .then((card) => {
+      if (!card) {
+        return res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
+      } return res.status(STATUS_OK).send(card);
+    })
     .catch((err) => {
       if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });

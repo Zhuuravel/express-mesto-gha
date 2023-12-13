@@ -3,7 +3,7 @@ const Card = require('../models/cards');
 const {
   BAD_REQUEST,
   SERVER_ERROR,
-  NotFound,
+  NOT_FOUND,
   STATUS_CREATED,
   STATUS_OK,
 } = require('../errors/errors');
@@ -33,8 +33,11 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => Card.findByIdAndDelete(req.params.cardId)
-  .orFail(() => new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`))
-  .then((card) => res.status(STATUS_OK).send(card))
+  .then((card) => {
+    if (!card) {
+      return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
+    } return res.status(STATUS_OK).send(card);
+  })
   .catch((err) => {
     if (err instanceof CastError) {
       return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
@@ -45,8 +48,11 @@ module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
   { new: true },
-).orFail(() => new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`))
-  .then((card) => res.status(STATUS_OK).send(card))
+).then((card) => {
+  if (!card) {
+    return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
+  } return res.status(STATUS_OK).send(card);
+})
   .catch((err) => {
     if (err instanceof CastError) {
       return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
@@ -57,8 +63,11 @@ module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $pull: { likes: req.user._id } }, // убрать _id из массива
   { new: true },
-).orFail(() => new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`))
-  .then((card) => res.status(STATUS_OK).send(card))
+).then((card) => {
+  if (!card) {
+    return res.status(NOT_FOUND).send({ message: `Карточка с указанным id: ${req.params.cardId} не найдена` });
+  } return res.status(STATUS_OK).send(card);
+})
   .catch((err) => {
     if (err instanceof CastError) {
       return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка' });
