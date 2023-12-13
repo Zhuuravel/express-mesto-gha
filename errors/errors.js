@@ -1,13 +1,20 @@
 const BAD_REQUEST = 400;
 const SERVER_ERROR = 500;
-const NOT_FOUND = 404;
 const STATUS_CREATED = 201;
 const STATUS_OK = 200;
+
+class NotFound extends Error {
+  constructor(message) {
+    super(message);
+    this.status = 404;
+    this.name = 'notFound';
+  }
+}
 
 module.exports = {
   BAD_REQUEST,
   SERVER_ERROR,
-  NOT_FOUND,
+  NotFound,
   STATUS_CREATED,
   STATUS_OK,
 };

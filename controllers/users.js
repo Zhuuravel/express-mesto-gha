@@ -1,11 +1,14 @@
+const mongoose = require('mongoose').default;
 const User = require('../models/users');
 const {
   BAD_REQUEST,
   SERVER_ERROR,
-  NOT_FOUND,
+  NotFound,
   STATUS_CREATED,
   STATUS_OK,
 } = require('../errors/errors');
+
+const { CastError, ValidationError } = mongoose.Error;
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -15,17 +18,12 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getCurrentUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => {
-      if (!user) {
-        res.status(NOT_FOUND).send({ message: `Пользователь по id: ${req.params.userId} не найден` });
-      } else res.status(STATUS_OK).send(user);
-    })
+    .orFail(() => new NotFound(`Пользователь по id: ${req.params.userId} не найден`))
+    .then((card) => res.status(STATUS_OK).send(card))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
-      }
+      if (err instanceof CastError) {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -34,11 +32,9 @@ module.exports.createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.status(STATUS_CREATED).send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
-      }
+      if (err instanceof ValidationError) {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 
@@ -55,11 +51,9 @@ module.exports.updateUserDescription = (req, res) => {
   )
     .then((user) => res.status(STATUS_OK).send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
-      }
+      if (err instanceof ValidationError) {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
 //   module.exports.updateUserDescription = (req, res) => {
@@ -89,10 +83,8 @@ module.exports.updateUserAvatar = (req, res) => {
   )
     .then((user) => res.status(STATUS_OK).send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
-      }
+      if (err instanceof ValidationError) {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+      } return res.status(SERVER_ERROR).send({ message: 'Произошла ошибка на сервере' });
     });
 };
