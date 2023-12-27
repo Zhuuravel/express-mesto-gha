@@ -7,7 +7,7 @@ const {
 const { auth } = require('./middlewares/auth')
 const NotFound = require('./errors/NotFound');
 const { celebrate, Joi, errors } = require('celebrate');
-const { reg } = require('./utils/isLink');
+const { urlValid } = require('./utils/validation');
 
 const app = express();
 
@@ -18,7 +18,7 @@ app.post('/users/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(reg),
+    avatar: Joi.string().regex(urlValid),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
