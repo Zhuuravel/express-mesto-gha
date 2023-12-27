@@ -19,7 +19,7 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
   if (!email || !password) {
-    return next(new BadRequest('Email и пароль обязательны!'));
+    next(new BadRequest('Email и пароль обязательны!'));
   }
 
   bcrypt.hash(password, 10, function(err, hash) {
@@ -28,13 +28,15 @@ module.exports.createUser = (req, res, next) => {
     }
     User.create({
       name, about, avatar, email, password: hash,
-    }).then((user) => res.status(STATUS_CREATED).send(user))
+    }).then((user) => {
+      return res.status(STATUS_CREATED).send(user)
+    })
       .catch((err) => {
         if (err instanceof ValidationError) {
-          return next(new BadRequest('Переданы некорректные данные при создании пользователя'));
+          next(new BadRequest('Переданы некорректные данные при создании пользователя'));
         }
         else if (err.code === 11000) {
-          return next(new ConflictingRequest('Пользователь уже существует'));
+          next(new ConflictingRequest('Пользователь уже существует'));
         }
       });
   })
@@ -43,7 +45,7 @@ module.exports.createUser = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return next(new BadRequest('Email и пароль обязательны!'));
+    next(new BadRequest('Email и пароль обязательны!'));
   }
   User.findUserByCredentials(email, password)
     .then((user) => {
@@ -53,11 +55,11 @@ module.exports.login = (req, res, next) => {
         maxAge: 3600000,
         httpOnly: true,
       });
-      res.status(STATUS_OK).send({ token });
+      return res.status(STATUS_OK).send({ token });
     })
     .catch((err) => {
       if (err instanceof ValidationError) {
-        return next(new BadRequest('Переданы некорректные данные при создании пользователя'));
+        next(new BadRequest('Переданы некорректные данные при создании пользователя'));
       } next(err)
     });
     // .catch((err) => {
@@ -67,7 +69,9 @@ module.exports.login = (req, res, next) => {
 
 module.exports.getUsers = (req, res, next) => {
 User.find({})
-    .then((users) => res.status(STATUS_OK).send(users))
+    .then((users) => {
+      return res.status(STATUS_OK).send(users)
+    })
     .catch(next);
 };
 
@@ -75,9 +79,9 @@ module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
+        next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
       } else if (err instanceof CastError) {
-        return next(new BadRequest('Переданы некорректные данные'));
+        next(new BadRequest('Переданы некорректные данные'));
       } return res.status(STATUS_OK).send(user);
     })
     .catch(next);
@@ -88,7 +92,7 @@ module.exports.getMyUser = (req, res, next) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
+        next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
       } return res.status(STATUS_OK).send(...user);
     })
     .catch(next);
@@ -105,10 +109,12 @@ module.exports.updateUserDescription = (req, res, next) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => res.status(STATUS_OK).send(user))
+    .then((user) => {
+      return res.status(STATUS_OK).send(user)
+    })
     .catch((err) => {
       if (err instanceof CastError) {
-        return next(new BadRequest('Переданы некорректные данные'));
+        next(new BadRequest('Переданы некорректные данные'));
       } next(err)
     });
 };
@@ -124,10 +130,12 @@ module.exports.updateUserAvatar = (req, res, next) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => res.status(STATUS_OK).send(user))
+    .then((user) => {
+      return res.status(STATUS_OK).send(user)
+    })
     .catch((err) => {
       if (err instanceof CastError) {
-        return next(new BadRequest('Переданы некорректные данные'));
+        next(new BadRequest('Переданы некорректные данные'));
       } next(err)
     });
 };
