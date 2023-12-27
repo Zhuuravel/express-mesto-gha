@@ -29,7 +29,7 @@ module.exports.createUser = (req, res, next) => {
     User.create({
       name, about, avatar, email, password: hash,
     }).then((user) => {
-      return res.status(STATUS_CREATED).send(user)
+      return res.status(STATUS_CREATED).send({ name, about, avatar, email, })
     })
       .catch((err) => {
         if (err instanceof ValidationError) {
@@ -49,7 +49,7 @@ module.exports.login = (req, res, next) => {
   }
   User.findUserByCredentials(email, password)
     .then((user) => {
-
+      console.log(user)
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' })
       res.cookie('jwt', token, {
         maxAge: 3600000,
@@ -62,9 +62,6 @@ module.exports.login = (req, res, next) => {
         next(new BadRequest('Переданы некорректные данные при создании пользователя'));
       } next(err)
     });
-    // .catch((err) => {
-    //   res.status(UNAUTORIZED).send({ message: err.message });
-    // });
 };
 
 module.exports.getUsers = (req, res, next) => {
@@ -93,7 +90,7 @@ module.exports.getMyUser = (req, res, next) => {
     .then((user) => {
       if (!user) {
         next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
-      } return res.status(STATUS_OK).send(...user);
+      } return res.status(STATUS_OK).send(user);
     })
     .catch(next);
 };

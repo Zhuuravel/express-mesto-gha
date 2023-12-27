@@ -45,12 +45,12 @@ userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return next(new Forbidden('Неправильные почта или пароль'));
-      }s
+        next(new Forbidden('Неправильные почта или пароль'));
+      }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return next(new Forbidden('Неправильные почта или пароль'));
+            next(new Forbidden('Неправильные почта или пароль'));
           }
 
           return user;
