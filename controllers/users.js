@@ -20,8 +20,8 @@ module.exports.createUser = (req, res, next) => {
   } = req.body;
   if (!email || !password) {
     return next(new BadRequest('Email и пароль обязательны!'));
-  } 
-  
+  }
+
   bcrypt.hash(password, 10, function(err, hash) {
     if (err) {
       throw err;
@@ -30,7 +30,10 @@ module.exports.createUser = (req, res, next) => {
       name, about, avatar, email, password: hash,
     }).then((user) => res.status(STATUS_CREATED).send(user))
       .catch((err) => {
-        if (err.code === 11000) {
+        if (err instanceof ValidationError) {
+          return next(new BadRequest('Переданы некорректные данные при создании пользователя'));
+        }
+        else if (err.code === 11000) {
           return next(new ConflictingRequest('Пользователь уже существует'));
         }
       });
@@ -45,14 +48,18 @@ module.exports.login = (req, res, next) => {
   User.findUserByCredentials(email, password)
     .then((user) => {
 
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' }) 
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' })
       res.cookie('jwt', token, {
         maxAge: 3600000,
         httpOnly: true,
       });
-      res.send({ token });
+      res.status(STATUS_OK).send({ token });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof ValidationError) {
+        return next(new BadRequest('Переданы некорректные данные при создании пользователя'));
+      } next(err)
+    });
     // .catch((err) => {
     //   res.status(UNAUTORIZED).send({ message: err.message });
     // });
@@ -60,7 +67,7 @@ module.exports.login = (req, res, next) => {
 
 module.exports.getUsers = (req, res, next) => {
 User.find({})
-    .then((users) => res.send({ data: users }))
+    .then((users) => res.status(STATUS_OK).send(users))
     .catch(next);
 };
 
@@ -69,6 +76,8 @@ module.exports.getCurrentUser = (req, res, next) => {
     .then((user) => {
       if (!user) {
         return next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
+      } else if (err instanceof CastError) {
+        return next(new BadRequest('Переданы некорректные данные'));
       } return res.status(STATUS_OK).send(user);
     })
     .catch(next);
@@ -80,7 +89,7 @@ module.exports.getMyUser = (req, res, next) => {
     .then((user) => {
       if (!user) {
         return next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
-      } return res.status(STATUS_OK).send(user);
+      } return res.status(STATUS_OK).send(...user);
     })
     .catch(next);
 };
@@ -97,7 +106,11 @@ module.exports.updateUserDescription = (req, res, next) => {
     },
   )
     .then((user) => res.status(STATUS_OK).send(user))
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof CastError) {
+        return next(new BadRequest('Переданы некорректные данные'));
+      } next(err)
+    });
 };
 
 module.exports.updateUserAvatar = (req, res, next) => {
@@ -112,5 +125,9 @@ module.exports.updateUserAvatar = (req, res, next) => {
     },
   )
     .then((user) => res.status(STATUS_OK).send(user))
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof CastError) {
+        return next(new BadRequest('Переданы некорректные данные'));
+      } next(err)
+    });
 };
