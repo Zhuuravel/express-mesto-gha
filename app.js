@@ -1,36 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose').default;
-const { celebrate, Joi, errors } = require('celebrate');
+const { errors } = require('celebrate');
+const { rateLimit } = require('express-rate-limit');
+const helmet = require('helmet');
 const routes = require('./routes');
-const {
-  createUser, login,
-} = require('./controllers/users');
-const { auth } = require('./middlewares/auth');
 const NotFound = require('./errors/NotFound');
-const { urlValid } = require('./utils/validation');
+const errorHandler = require('./middlewares/error-handler');
 
 const app = express();
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(urlValid),
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), createUser);
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), login);
-
-app.use(auth);
+app.use(limiter);
+app.use(helmet());
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
@@ -46,12 +33,7 @@ app.use('*', (req, res, next) => next(new NotFound('Неверный путь'))
 
 app.use(errors()); // обработчик ошибок celebrate
 
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = statusCode === 500 ? 'На сервере произошла ошибка' : err.message;
-  res.status(statusCode).send({ message });
-  next();
-});
+app.use(errorHandler);
 
 app.listen(3000, () => {
   console.log('Server started on port 3000');

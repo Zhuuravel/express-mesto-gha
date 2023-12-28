@@ -18,10 +18,6 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  if (!email || !password) {
-    next(new BadRequest('Email и пароль обязательны!'));
-  }
-
   bcrypt.hash(password, 10, (err, hash) => {
     if (err) {
       throw err;
@@ -36,6 +32,8 @@ module.exports.createUser = (req, res, next) => {
           next(new BadRequest('Переданы некорректные данные при создании пользователя'));
         } else if (error.code === 11000) {
           next(new ConflictingRequest('Пользователь уже существует'));
+        } else {
+          next(error);
         }
       });
   });
