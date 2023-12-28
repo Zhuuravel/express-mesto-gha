@@ -22,32 +22,31 @@ module.exports.createUser = (req, res, next) => {
     next(new BadRequest('Email и пароль обязательны!'));
   }
 
-  bcrypt.hash(password, 10, function(err, hash) {
+  bcrypt.hash(password, 10, (err, hash) => {
     if (err) {
       throw err;
     }
     User.create({
       name, about, avatar, email, password: hash,
-    }).then((user) => {
-      return res.status(STATUS_CREATED).send({ name, about, avatar, email, })
-    })
-      .catch((err) => {
-        if (err instanceof ValidationError) {
+    }).then(() => res.status(STATUS_CREATED).send({
+      name, about, avatar, email,
+    }))
+      .catch((error) => {
+        if (error instanceof ValidationError) {
           next(new BadRequest('Переданы некорректные данные при создании пользователя'));
-        }
-        else if (err.code === 11000) {
+        } else if (error.code === 11000) {
           next(new ConflictingRequest('Пользователь уже существует'));
         }
       });
-  })
+  });
 };
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      console.log(user)
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' })
+      console.log(user);
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('jwt', token, {
         maxAge: 3600000,
         httpOnly: true,
@@ -57,28 +56,26 @@ module.exports.login = (req, res, next) => {
     .catch((err) => {
       if (err instanceof ValidationError) {
         next(new BadRequest('Переданы некорректные данные при входе пользователя'));
-      } next(err)
+      } next(err);
     });
 };
 
 module.exports.getUsers = (req, res, next) => {
-User.find({})
-    .then((users) => {
-      return res.status(STATUS_OK).send(users)
-    })
+  User.find({})
+    .then((users) => res.status(STATUS_OK).send(users))
     .catch(next);
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
-       if (!user) {
+      if (!user) {
         next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
       } return res.status(STATUS_OK).send(user);
     })
     .catch((err) => {
       if (err instanceof CastError) {
-        next(new BadRequest('Переданы некорректные данные'));(!user);
+        next(new BadRequest('Переданы некорректные данные'));
       } next(err);
     });
 };
@@ -105,13 +102,11 @@ module.exports.updateUserDescription = (req, res, next) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => {
-      return res.status(STATUS_OK).send(user)
-    })
+    .then((user) => res.status(STATUS_OK).send(user))
     .catch((err) => {
       if (err instanceof CastError) {
         next(new BadRequest('Переданы некорректные данные'));
-      } next(err)
+      } next(err);
     });
 };
 
@@ -126,12 +121,10 @@ module.exports.updateUserAvatar = (req, res, next) => {
       runValidators: true, // данные будут валидированы перед изменением
     },
   )
-    .then((user) => {
-      return res.status(STATUS_OK).send(user)
-    })
+    .then((user) => res.status(STATUS_OK).send(user))
     .catch((err) => {
       if (err instanceof CastError) {
         next(new BadRequest('Переданы некорректные данные'));
-      } next(err)
+      } next(err);
     });
 };

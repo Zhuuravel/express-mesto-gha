@@ -13,9 +13,7 @@ const { CastError, ValidationError } = mongoose.Error;
 module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
-    .then((cards) => {
-      return res.status(STATUS_OK).send(cards)
-    })
+    .then((cards) => res.status(STATUS_OK).send(cards))
     .catch(next);
 };
 
@@ -25,41 +23,37 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => {
       Card.findById(card._id)
         .populate('owner')
-        .then((cards) => {
-          return res.status(STATUS_CREATED).send(cards)
-        });
+        .then((cards) => res.status(STATUS_CREATED).send(cards));
     })
     .catch((err) => {
       if (err instanceof ValidationError) {
         next(new BadRequest('Некорректные данные при создании карточки'));
-      } next(err)
+      } next(err);
     });
 };
 
 module.exports.deleteCard = (req, res, next) => Card.findById(req.params.cardId)
-.then((card) => {
-  const userId = req.user._id;
+  // eslint-disable-next-line consistent-return
+  .then((card) => {
+    const userId = req.user._id;
     if (!card) {
       return next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
-    } 
-    if (!card.owner.equals(userId)) {
+    } if (!card.owner.equals(userId)) {
       return next(new Forbidden('Попытка удалить чужую карточку!'));
-    }
-     Card.deleteOne(card)
-     .then(() => {
-      return res.status(STATUS_OK).send(card)
-     });
+    } Card.deleteOne(card)
+      .then(() => res.status(STATUS_OK).send(card));
   })
   .catch((err) => {
     if (err instanceof ValidationError) {
       next(new BadRequest('Некорректные данные при создании карточки'));
-    } next(err)
+    } next(err);
   });
 
 module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
   { new: true },
+// eslint-disable-next-line consistent-return
 ).then((card) => {
   if (card) {
     return res.status(STATUS_OK).send(card);
@@ -68,20 +62,20 @@ module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
   .catch((err) => {
     if (err instanceof CastError) {
       next(new BadRequest('Переданы некорректные данные для постановки лайка'));
-    } next(err)
+    } next(err);
   });
 
 module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $pull: { likes: req.user._id } }, // убрать _id из массива
   { new: true },
+// eslint-disable-next-line consistent-return
 ).then((card) => {
   if (card) {
     return res.status(STATUS_OK).send(card);
   } next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
-})
-.catch((err) => {
+}).catch((err) => {
   if (err instanceof CastError) {
     next(new BadRequest('Переданы некорректные данные для постановки лайка'));
-  } next(err)
+  } next(err);
 });

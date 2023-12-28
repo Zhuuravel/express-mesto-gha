@@ -1,12 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose').default;
+const { celebrate, Joi, errors } = require('celebrate');
 const routes = require('./routes');
 const {
   createUser, login,
 } = require('./controllers/users');
-const { auth } = require('./middlewares/auth')
+const { auth } = require('./middlewares/auth');
 const NotFound = require('./errors/NotFound');
-const { celebrate, Joi, errors } = require('celebrate');
 const { urlValid } = require('./utils/validation');
 
 const app = express();
@@ -42,9 +42,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 
 app.use(routes);
 
-app.use('*', (req, res, next) => {
-  return next(new NotFound('Неверный путь'));
-});
+app.use('*', (req, res, next) => next(new NotFound('Неверный путь')));
 
 app.use(errors()); // обработчик ошибок celebrate
 

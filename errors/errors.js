@@ -13,5 +13,5 @@ module.exports = {
   STATUS_CREATED,
   STATUS_OK,
   UNAUTORIZED,
-  FORBIDDEN
+  FORBIDDEN,
 };
