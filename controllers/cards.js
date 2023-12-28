@@ -40,14 +40,14 @@ module.exports.deleteCard = (req, res, next) => Card.findById(req.params.cardId)
 .then((card) => {
   const userId = req.user._id;
     if (!card) {
-      next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
+      return next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
     } 
-    else if (card.owner !== userId) {
-      next(new Forbidden('Попытка удалить чужую карточку!'));
+    if (!card.owner.equals(userId)) {
+      return next(new Forbidden('Попытка удалить чужую карточку!'));
     }
      Card.deleteOne(card)
-     .then((cards) => {
-      return res.status(STATUS_CREATED).send(cards)
+     .then(() => {
+      return res.status(STATUS_OK).send(card)
      });
   })
   .catch((err) => {
@@ -61,9 +61,9 @@ module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
   { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
   { new: true },
 ).then((card) => {
-  if (!card) {
-    next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
-  } return res.status(STATUS_OK).send(card);
+  if (card) {
+    return res.status(STATUS_OK).send(card);
+  } next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
 })
   .catch((err) => {
     if (err instanceof CastError) {
@@ -76,9 +76,9 @@ module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   { $pull: { likes: req.user._id } }, // убрать _id из массива
   { new: true },
 ).then((card) => {
-  if (!card) {
-    next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
-  } return res.status(STATUS_OK).send(card);
+  if (card) {
+    return res.status(STATUS_OK).send(card);
+  } next(new NotFound(`Карточка с указанным id: ${req.params.cardId} не найдена`));
 })
 .catch((err) => {
   if (err instanceof CastError) {

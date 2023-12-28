@@ -44,10 +44,7 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    next(new BadRequest('Email и пароль обязательны!'));
-  }
-  User.findUserByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       console.log(user)
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' })
@@ -59,7 +56,7 @@ module.exports.login = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof ValidationError) {
-        next(new BadRequest('Переданы некорректные данные при создании пользователя'));
+        next(new BadRequest('Переданы некорректные данные при входе пользователя'));
       } next(err)
     });
 };
@@ -75,13 +72,15 @@ User.find({})
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
-      if (!user) {
+       if (!user) {
         next(new NotFound(`Пользователь по id: ${req.params.userId} не найден`));
-      } else if (err instanceof CastError) {
-        next(new BadRequest('Переданы некорректные данные'));
       } return res.status(STATUS_OK).send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof CastError) {
+        next(new BadRequest('Переданы некорректные данные'));(!user);
+      } next(err);
+    });
 };
 
 module.exports.getMyUser = (req, res, next) => {
